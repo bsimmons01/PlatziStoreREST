@@ -9,9 +9,31 @@ import SwiftUI
 
 @main
 struct PlatziStoreRESTApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
+  @AppStorage("isAuthenticated") private var isAuthenticated: Bool = false
+  @Environment(\.authenticationController) private var authenticationController
+  @State private var store = PlatziStore(httpClient: HTTPClient())
+  @State private var isLoading: Bool = true
+
+  var body: some Scene {
+    WindowGroup {
+      ZStack {
+        if isLoading {
+          ProgressView("Authenticating...")
+            .task {
+              isAuthenticated = await authenticationController.checkAuthentication()
+              isLoading = false
+            }
+        } else if isAuthenticated {
+          HomeScreen()
+            .environment(store)
+        } else {
+          VStack {
+            //RegistrationScreen()
+            LoginScreen()
+          }
         }
+      }
     }
+  }
+
 }
